@@ -1,6 +1,7 @@
 import express from 'express';
 import db from '../database.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+import { sendOrderConfirmation, sendAdminNotification } from '../utils/emailService.js';
 
 const router = express.Router();
 
@@ -49,7 +50,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 
 // Create order
 router.post('/', authenticateToken, (req, res) => {
-  const { items, total, shipping_address } = req.body;
+  const { items, total, shipping_address, payment_id } = req.body;
 
   db.run(
     'INSERT INTO orders (user_id, total, shipping_address, status) VALUES (?, ?, ?, ?)',
@@ -69,7 +70,60 @@ router.post('/', authenticateToken, (req, res) => {
       });
 
       stmt.finalize();
-      res.status(201).json({ id: orderId, message: 'Order created successfully' });
+
+      // Get order details with items for email
+      db.get('SELECT * FROM orders WHERE id = ?', [orderId], (err, order) => {
+        if (err) {
+          console.error('Error fetching order for email:', err);
+          return res.status(201).json({ id: orderId, message: 'Order created successfully' });
+        }
+
+        db.all(
+          `SELECT oi.*, p.name as product_name, p.image_url 
+           FROM order_items oi 
+           JOIN products p ON oi.product_id = p.id 
+           WHERE oi.order_id = ?`,
+          [orderId],
+          async (err, orderItems) => {
+            if (err) {
+              console.error('Error fetching order items for email:', err);
+              return res.status(201).json({ id: orderId, message: 'Order created successfully' });
+            }
+
+            // Update order with payment_id if provided
+            if (payment_id) {
+              db.run('UPDATE orders SET status = ? WHERE id = ?', ['confirmed', orderId]);
+              order.status = 'confirmed';
+            }
+
+            // Send confirmation email to customer
+            try {
+              await sendOrderConfirmation(
+                req.user.email,
+                req.user.name,
+                { ...order, payment_id },
+                orderItems
+              );
+              console.log(`Order confirmation email sent to ${req.user.email}`);
+            } catch (emailError) {
+              console.error('Failed to send order confirmation:', emailError);
+            }
+
+            // Send notification to admin
+            try {
+              await sendAdminNotification(
+                { ...order, payment_id },
+                orderItems,
+                { name: req.user.name, email: req.user.email }
+              );
+            } catch (emailError) {
+              console.error('Failed to send admin notification:', emailError);
+            }
+
+            res.status(201).json({ id: orderId, message: 'Order created successfully' });
+          }
+        );
+      });
     }
   );
 });
