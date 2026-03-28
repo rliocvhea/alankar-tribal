@@ -28,8 +28,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Initialize database
-await initDatabase();
+// Initialize database with error handling
+try {
+  await initDatabase();
+  console.log('✅ Database initialized successfully');
+} catch (error) {
+  console.error('⚠️  Database initialization error:', error);
+  console.log('Continuing anyway...');
+}
 
 // Routes
 app.use('/api/auth', authRoutes);
