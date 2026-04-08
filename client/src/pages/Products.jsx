@@ -47,7 +47,7 @@ export default function Products() {
     }
   };
 
-  const categories = ['Electronics', 'Fashion', 'Sports', 'Kitchen', 'Office', 'Home Decor'];
+  const categories = ['Dhokra frame', 'Jewellery'];
 
   if (loading) {
     return (

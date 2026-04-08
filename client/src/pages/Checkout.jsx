@@ -125,9 +125,9 @@ export default function Checkout() {
           <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
           <div className="card p-6 space-y-3">
             {isWholesale && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                <p className="text-green-800 font-semibold text-sm">💼 Wholesale Order</p>
-                <p className="text-xs text-green-700">{user?.company_name || 'Bulk pricing applied'}</p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                <p className="text-amber-900 font-semibold text-sm">💼 Wholesale Order</p>
+                <p className="text-xs text-amber-800">{user?.company_name || 'Bulk pricing applied'}</p>
               </div>
             )}
             {cart.map(item => {
@@ -137,7 +137,7 @@ export default function Checkout() {
                 <span>
                   {item.name} x {item.quantity}
                   {isWholesale && item.wholesale_price && (
-                    <span className="text-xs text-green-600 ml-1">(W)</span>
+                    <span className="text-xs text-accent ml-1">(W)</span>
                   )}
                 </span>
                 <span className="font-semibold">${(itemPrice * item.quantity).toFixed(2)}</span>

@@ -34,7 +34,7 @@ export default function Login() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <Link to="/register" className="font-medium text-primary hover:text-blue-600">
+            <Link to="/register" className="font-medium text-primary hover:text-[#5D4037]">
               create a new account
             </Link>
           </p>
@@ -48,7 +48,7 @@ export default function Login() {
               </div>
             )}
 
-            <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded text-sm">
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded text-sm">
               <p className="font-semibold mb-1">Demo Accounts:</p>
               <p>Admin: admin@shophub.com / admin123</p>
               <p>Or register as a customer</p>

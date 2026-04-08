@@ -58,7 +58,7 @@ export default function Register() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <Link to="/login" className="font-medium text-primary hover:text-blue-600">
+            <Link to="/login" className="font-medium text-primary hover:text-[#5D4037]">
               Sign in
             </Link>
           </p>

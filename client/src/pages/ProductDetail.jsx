@@ -79,7 +79,7 @@ export default function ProductDetail() {
           <p className="text-gray-600 mb-4">{product.description}</p>
           
           <div className="mb-4">
-            <span className="inline-block bg-blue-100 text-primary px-3 py-1 rounded-full text-sm font-semibold">
+            <span className="inline-block bg-amber-100 text-primary px-3 py-1 rounded-full text-sm font-semibold">
               {product.category}
             </span>
           </div>
@@ -89,15 +89,15 @@ export default function ProductDetail() {
               ${displayPrice}
             </div>
             {isWholesale && product.wholesale_price ? (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-green-800 font-semibold">🎉 Wholesale Price Active!</p>
-                <p className="text-sm text-green-700">Minimum order: {product.min_wholesale_qty} units</p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-amber-900 font-semibold">🎉 Wholesale Price Active!</p>
+                <p className="text-sm text-amber-800">Minimum order: {product.min_wholesale_qty} units</p>
                 <p className="text-xs text-gray-600 mt-1">Retail price: ${product.price}</p>
               </div>
             ) : product.wholesale_price ? (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-blue-800 font-semibold">💼 Bulk Pricing Available</p>
-                <p className="text-sm text-blue-700">Wholesale price: ${product.wholesale_price} (min. {product.min_wholesale_qty} units)</p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-amber-900 font-semibold">💼 Bulk Pricing Available</p>
+                <p className="text-sm text-amber-800">Wholesale price: ${product.wholesale_price} (min. {product.min_wholesale_qty} units)</p>
                 <p className="text-xs text-gray-600 mt-1">Register as wholesale customer to access bulk pricing</p>
               </div>
             ) : null}
@@ -149,8 +149,8 @@ export default function ProductDetail() {
               {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
           ) : (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-              <p className="text-blue-800 font-semibold mb-2">Admin View</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+              <p className="text-amber-900 font-semibold mb-2">Admin View</p>
               <p className="text-sm text-gray-600 mb-3">You are viewing this as the store owner</p>
               <Link to="/admin" className="btn-primary inline-block">
                 Go to Dashboard

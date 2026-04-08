@@ -23,7 +23,7 @@ export default function ProductCard({ product }) {
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
         />
         {product.stock < 10 && product.stock > 0 && (
-          <div className="absolute top-2 right-2 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+          <div className="absolute top-2 right-2 bg-accent text-white px-3 py-1 rounded-full text-sm font-semibold">
             Only {product.stock} left
           </div>
         )}
@@ -40,13 +40,13 @@ export default function ProductCard({ product }) {
               <p className="text-xs text-gray-500 mt-1">Min. {product.min_wholesale_qty} units</p>
             )}
             {!isWholesale && product.wholesale_price && (
-              <p className="text-xs text-green-600 mt-1">Bulk pricing available</p>
+              <p className="text-xs text-accent mt-1">Bulk pricing available</p>
             )}
           </div>
           {user?.role !== 'admin' ? (
             <button
               onClick={handleAddToCart}
-              className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-semibold"
+              className="bg-primary hover:bg-[#5D4037] text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-semibold"
             >
               Add to Cart
             </button>

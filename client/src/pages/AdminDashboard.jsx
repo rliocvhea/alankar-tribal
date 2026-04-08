@@ -13,7 +13,7 @@ export default function AdminDashboard() {
     price: '',
     wholesale_price: '',
     min_wholesale_qty: '10',
-    category: 'Electronics',
+    category: 'Dhokra frame',
     image_url: '',
     stock: ''
   });
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
       price: '',
       wholesale_price: '',
       min_wholesale_qty: '10',
-      category: 'Electronics',
+      category: 'Dhokra frame',
       image_url: '',
       stock: ''
     });
@@ -193,12 +193,8 @@ export default function AdminDashboard() {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   >
-                    <option>Electronics</option>
-                    <option>Fashion</option>
-                    <option>Sports</option>
-                    <option>Kitchen</option>
-                    <option>Office</option>
-                    <option>Home Decor</option>
+                    <option>Dhokra frame</option>
+                    <option>Jewellery</option>
                   </select>
                 </div>
                 <div>
@@ -251,7 +247,7 @@ export default function AdminDashboard() {
                   <p className="text-primary font-bold">
                     Retail: ${product.price}
                     {product.wholesale_price && (
-                      <span className="text-green-600 text-sm ml-2">
+                      <span className="text-accent text-sm ml-2">
                         | Wholesale: ${product.wholesale_price} (min. {product.min_wholesale_qty})
                       </span>
                     )}
@@ -261,13 +257,13 @@ export default function AdminDashboard() {
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={() => handleEditProduct(product)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm"
+                    className="bg-secondary hover:bg-[#8D6E63] text-white px-4 py-2 rounded text-sm"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteProduct(product.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm"
+                    className="bg-primary hover:bg-[#5D4037] text-white px-4 py-2 rounded text-sm"
                   >
                     Delete
                   </button>
