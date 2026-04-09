@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import logo from '../assets/IMG_4482.PNG';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -10,8 +11,8 @@ export default function Navbar() {
     <nav className="bg-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <span className="text-2xl">🛍️</span>
+          <Link to="/" className="flex items-center space-x-3">
+            <img src={logo} alt="Alankara Tribal" className="h-12 w-auto" />
             <span className="text-2xl font-bold text-primary">Alankara Tribal</span>
           </Link>
 

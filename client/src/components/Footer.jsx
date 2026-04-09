@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import logo from '../assets/IMG_4482.PNG';
 
 export default function Footer() {
   return (
@@ -7,7 +8,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About Section */}
           <div>
-            <h3 className="text-white text-lg font-bold mb-4">Alankara Tribal</h3>
+            <div className="flex items-center space-x-2 mb-4">
+              <img src={logo} alt="Alankara Tribal" className="h-10 w-auto" />
+              <h3 className="text-white text-lg font-bold">Alankara Tribal</h3>
+            </div>
             <p className="text-sm text-gray-400 leading-relaxed">
               Preserving 4,000 years of Dhokra heritage. Authentic handcrafted tribal art 
               supporting artisan communities.
