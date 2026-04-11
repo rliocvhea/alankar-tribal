@@ -5,7 +5,7 @@ dotenv.config();
 
 export default defineConfig({
   plugins: [react()],
-  assetsInclude: ['**/*.PNG'],
+  assetsInclude: ['**/*.png'],
   server: {
     port: 3000,
     proxy: {

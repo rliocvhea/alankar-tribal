@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import logo from '../assets/IMG_4482.PNG';
+import logo from '../assets/refined_logo_transparent.png';
 
 export default function Register() {
   const [formData, setFormData] = useState({
