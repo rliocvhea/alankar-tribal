@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import logo from '../assets/refined_logo_transparent.png';
+import logo from '../assets/new_logo_alankara.png';
 
 export default function Navbar() {
   const { user, logout } = useAuth();

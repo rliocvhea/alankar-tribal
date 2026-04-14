@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import logo from '../assets/refined_logo_transparent.png';
+import logo from '../assets/new_logo_alankara.png';
 
 export default function Footer() {
   return (
