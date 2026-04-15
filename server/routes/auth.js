@@ -1,53 +1,59 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import db from '../database.js';
+import database from '../database.js';
 
 const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
-  const { email, password, name, customer_type, company_name } = req.body;
+  try {
+    const { email, password, name, customer_type, company_name } = req.body;
 
-  if (!email || !password || !name) {
-    return res.status(400).json({ message: 'Email, password, and name are required' });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const type = customer_type || 'retail';
-
-  db.run(
-    'INSERT INTO users (email, password, name, role, customer_type, company_name) VALUES (?, ?, ?, ?, ?, ?)',
-    [email, hashedPassword, name, 'customer', type, company_name || null],
-    function (err) {
-      if (err) {
-        return res.status(400).json({ message: 'Email already exists' });
-      }
-
-      const token = jwt.sign(
-        { id: this.lastID, email, role: 'customer', customer_type: type },
-        process.env.JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-
-      res.status(201).json({
-        token,
-        user: { id: this.lastID, email, name, role: 'customer', customer_type: type, company_name }
-      });
+    if (!email || !password || !name) {
+      return res.status(400).json({ message: 'Email, password, and name are required' });
     }
-  );
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const type = customer_type || 'retail';
+    const params = [email, hashedPassword, name, 'customer', type, company_name || null];
+
+    const queryStr = database.pool
+      ? 'INSERT INTO users (email, password, name, role, customer_type, company_name) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id'
+      : 'INSERT INTO users (email, password, name, role, customer_type, company_name) VALUES (?, ?, ?, ?, ?, ?)';
+
+    const result = await database.query(queryStr, params);
+    const userId = database.pool ? result.rows[0].id : result.lastID;
+
+    const token = jwt.sign(
+      { id: userId, email, role: 'customer', customer_type: type },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({
+      token,
+      user: { id: userId, email, name, role: 'customer', customer_type: type, company_name }
+    });
+  } catch (err) {
+    res.status(400).json({ message: 'Email already exists' });
+  }
 });
 
 // Login
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password required' });
-  }
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password required' });
+    }
 
-  db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
-    if (err || !user) {
+    const param = database.pool ? '$1' : '?';
+    const result = await database.query(`SELECT * FROM users WHERE email = ${param}`, [email]);
+    const user = result.rows[0];
+
+    if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -73,7 +79,9 @@ router.post('/login', (req, res) => {
         company_name: user.company_name
       }
     });
-  });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 export default router;

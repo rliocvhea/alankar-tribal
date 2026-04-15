@@ -1,62 +1,109 @@
 import sqlite3 from 'sqlite3';
+import pkg from 'pg';
+const { Pool } = pkg;
 import bcrypt from 'bcryptjs';
 
-const db = new sqlite3.Database('./database.db');
+// Detect environment and choose database
+const isProduction = process.env.NODE_ENV === 'production' || process.env.DATABASE_URL;
+let db;
+let pool;
+
+if (isProduction && process.env.DATABASE_URL) {
+  console.log('🐘 Using PostgreSQL database');
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+  });
+} else {
+  console.log('📁 Using SQLite database');
+  db = new sqlite3.Database('./database.db');
+}
+
+// Database query wrapper
+const query = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    if (pool) {
+      // PostgreSQL
+      pool.query(sql, params)
+        .then(result => resolve({ rows: result.rows, lastID: result.rows[0]?.id }))
+        .catch(err => reject(err));
+    } else {
+      // SQLite
+      if (sql.trim().toUpperCase().startsWith('SELECT')) {
+        db.all(sql, params, (err, rows) => {
+          if (err) reject(err);
+          else resolve({ rows });
+        });
+      } else {
+        db.run(sql, params, function(err) {
+          if (err) reject(err);
+          else resolve({ lastID: this.lastID, changes: this.changes });
+        });
+      }
+    }
+  });
+};
 
 export const initDatabase = () => {
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const isPG = !!pool;
+      
+      // Serial type: SERIAL for PostgreSQL, INTEGER PRIMARY KEY AUTOINCREMENT for SQLite
+      const serial = isPG ? 'SERIAL PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+      const timestamp = isPG ? 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP' : 'DATETIME DEFAULT CURRENT_TIMESTAMP';
+      
       // Users table
-      db.run(`
+      await query(`
         CREATE TABLE IF NOT EXISTS users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          email TEXT UNIQUE NOT NULL,
-          password TEXT NOT NULL,
-          name TEXT NOT NULL,
-          role TEXT DEFAULT 'customer',
-          customer_type TEXT DEFAULT 'retail',
-          company_name TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          id ${serial},
+          email VARCHAR(255) UNIQUE NOT NULL,
+          password VARCHAR(255) NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          role VARCHAR(50) DEFAULT 'customer',
+          customer_type VARCHAR(50) DEFAULT 'retail',
+          company_name VARCHAR(255),
+          created_at ${timestamp}
         )
       `);
 
       // Products table
-      db.run(`
+      await query(`
         CREATE TABLE IF NOT EXISTS products (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
+          id ${serial},
+          name VARCHAR(255) NOT NULL,
           description TEXT,
-          price REAL NOT NULL,
-          wholesale_price REAL,
+          price DECIMAL(10,2) NOT NULL,
+          wholesale_price DECIMAL(10,2),
           min_wholesale_qty INTEGER DEFAULT 10,
-          category TEXT,
+          category VARCHAR(100),
           image_url TEXT,
           stock INTEGER DEFAULT 0,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          created_at ${timestamp}
         )
       `);
 
       // Orders table
-      db.run(`
+      await query(`
         CREATE TABLE IF NOT EXISTS orders (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id ${serial},
           user_id INTEGER NOT NULL,
-          total REAL NOT NULL,
-          status TEXT DEFAULT 'pending',
+          total DECIMAL(10,2) NOT NULL,
+          status VARCHAR(50) DEFAULT 'pending',
           shipping_address TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          created_at ${timestamp},
           FOREIGN KEY (user_id) REFERENCES users(id)
         )
       `);
 
       // Order items table
-      db.run(`
+      await query(`
         CREATE TABLE IF NOT EXISTS order_items (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id ${serial},
           order_id INTEGER NOT NULL,
           product_id INTEGER NOT NULL,
           quantity INTEGER NOT NULL,
-          price REAL NOT NULL,
+          price DECIMAL(10,2) NOT NULL,
           FOREIGN KEY (order_id) REFERENCES orders(id),
           FOREIGN KEY (product_id) REFERENCES products(id)
         )
@@ -64,13 +111,11 @@ export const initDatabase = () => {
 
       // Create default admin user
       const adminPassword = bcrypt.hashSync('admin123', 10);
-      db.run(
-        `INSERT OR IGNORE INTO users (email, password, name, role) VALUES (?, ?, ?, ?)`,
-        ['admin@shophub.com', adminPassword, 'Admin User', 'admin'],
-        (err) => {
-          if (err) console.error('Admin user creation error:', err);
-        }
-      );
+      const insertOrIgnore = isPG 
+        ? 'INSERT INTO users (email, password, name, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING'
+        : 'INSERT OR IGNORE INTO users (email, password, name, role) VALUES (?, ?, ?, ?)';
+      
+      await query(insertOrIgnore, ['admin@shophub.com', adminPassword, 'Admin User', 'admin']);
 
       // Insert sample products with wholesale pricing
       const sampleProducts = [
@@ -92,13 +137,30 @@ export const initDatabase = () => {
         ['Dumbbell Set', 'Adjustable dumbbell set 20kg pair', 119.99, 95.99, 4, 'Sports', 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400', 75]
       ];
 
-      const stmt = db.prepare(`INSERT OR IGNORE INTO products (name, description, price, wholesale_price, min_wholesale_qty, category, image_url, stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
-      sampleProducts.forEach(product => stmt.run(product));
-      stmt.finalize();
+      // Insert sample products
+      const insertProduct = isPG
+        ? 'INSERT INTO products (name, description, price, wholesale_price, min_wholesale_qty, category, image_url, stock) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT DO NOTHING'
+        : 'INSERT OR IGNORE INTO products (name, description, price, wholesale_price, min_wholesale_qty, category, image_url, stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+
+      for (const product of sampleProducts) {
+        try {
+          await query(insertProduct, product);
+        } catch (err) {
+          console.log('Product insert skipped (may already exist)');
+        }
+      }
 
       resolve();
-    });
+    } catch (error) {
+      console.error('Database initialization error:', error);
+      reject(error);
+    }
   });
 };
 
-export default db;
+// Export database interface
+export default {
+  query,
+  get pool() { return pool; },
+  get db() { return db; }
+};
